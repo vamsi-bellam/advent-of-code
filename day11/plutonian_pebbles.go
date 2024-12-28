@@ -43,27 +43,44 @@ func makeNumber(digits []int) int {
 	return num
 }
 
-func noOfStonesAfterBlinks(stones []int, blinks int) int {
-	newStones := stones
+type BlinkAndStone struct {
+	blink, stone int
+}
 
-	for blinks > 0 {
+func stonesAfterBlinks(stone int, blinks int, cache map[BlinkAndStone]int) int {
 
-		stones = newStones
-		newStones = make([]int, 0)
-
-		for i, v := range stones {
-			if v == 0 {
-				newStones = append(newStones, 1)
-			} else if digits := getDigits(v); len(digits)%2 == 0 {
-				newStones = append(newStones, makeNumber(digits[:len(digits)/2]))
-				newStones = append(newStones, makeNumber(digits[len(digits)/2:]))
-			} else {
-				newStones = append(newStones, stones[i]*2024)
-			}
-		}
-		blinks--
+	if v, ok := cache[BlinkAndStone{blinks, stone}]; ok {
+		return v
 	}
-	return len(newStones)
+
+	newStones := make([]int, 0)
+
+	if stone == 0 {
+		newStones = append(newStones, 1)
+	} else if digits := getDigits(stone); len(digits)%2 == 0 {
+		newStones = append(newStones, makeNumber(digits[:len(digits)/2]))
+		newStones = append(newStones, makeNumber(digits[len(digits)/2:]))
+	} else {
+		newStones = append(newStones, stone*2024)
+	}
+
+	if blinks == 1 {
+		count := len(newStones)
+		cache[BlinkAndStone{blinks, stone}] = count
+		return count
+	}
+
+	sum := 0
+
+	for _, stone := range newStones {
+		count := stonesAfterBlinks(stone, blinks-1, cache)
+		cache[BlinkAndStone{blinks - 1, stone}] = count
+		sum += count
+	}
+
+	cache[BlinkAndStone{blinks, stone}] = sum
+
+	return sum
 }
 
 func main() {
@@ -98,6 +115,20 @@ func main() {
 	stonesCopy := make([]int, len(stones))
 	copy(stonesCopy, stones)
 
-	fmt.Printf("stones after blinking 25 times - %d\n", noOfStonesAfterBlinks(stones, 25))
-	fmt.Printf("stones after blinking 75 times - %d\n", noOfStonesAfterBlinks(stonesCopy, 75))
+	sum := 0
+
+	cache := make(map[BlinkAndStone]int)
+
+	for _, stone := range stones {
+		sum += stonesAfterBlinks(stone, 25, cache)
+	}
+
+	sum2 := 0
+
+	for _, stone := range stones {
+		sum2 += stonesAfterBlinks(stone, 75, cache)
+	}
+
+	fmt.Printf("stones after blinking 25 times - %d\n", sum)
+	fmt.Printf("stones after blinking 75 times - %d\n", sum2)
 }
