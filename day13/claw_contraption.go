@@ -19,6 +19,7 @@ type Game struct {
 	Prize   Point
 }
 
+// Using https://en.wikipedia.org/wiki/Cramer%27s_rule
 func solve(game Game) (int, int, bool) {
 
 	/*
