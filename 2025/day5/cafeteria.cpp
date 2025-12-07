@@ -1,6 +1,37 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
+
+using IngredientsRange = std::pair<int64_t, int64_t>;
+using FreshIngredients = std::vector<IngredientsRange>;
+
+int64_t get_total_fresh(FreshIngredients &fresh_ingredients)
+{
+    if (fresh_ingredients.empty())
+        return 0;
+
+    IngredientsRange current{fresh_ingredients.at(0)};
+
+    int64_t total_fresh{0};
+
+    for (const auto &next : fresh_ingredients)
+    {
+        if (next.first <= current.second)
+        {
+            current.second = std::max(current.second, next.second);
+        }
+        else
+        {
+            total_fresh += current.second - current.first + 1;
+            current = next;
+        }
+    }
+
+    total_fresh += current.second - current.first + 1;
+
+    return total_fresh;
+}
 
 int main()
 {
@@ -13,7 +44,7 @@ int main()
     }
 
     std::string line;
-    std::vector<std::pair<int64_t, int64_t>> fresh_ingredients;
+    FreshIngredients fresh_ingredients;
     std::vector<int64_t> queries;
 
     while (std::getline(file, line))
@@ -46,4 +77,12 @@ int main()
     }
 
     std::cout << "(PART 1) : Total fresh : " << total_fresh << std::endl;
+
+    std::sort(fresh_ingredients.begin(),
+              fresh_ingredients.end(),
+              [](IngredientsRange &a, IngredientsRange &b)
+              { return a.first < b.first; });
+
+    std::cout << "(PART 2) : Total fresh : "
+              << get_total_fresh(fresh_ingredients) << std::endl;
 }
