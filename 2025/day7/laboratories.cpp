@@ -49,14 +49,48 @@ int32_t traverse(std::vector<std::vector<char>> &grid, Position next)
     return 0;
 }
 
-int32_t get_num_beam_splits(std::vector<std::vector<char>> &grid)
+int64_t timelines(std::vector<std::vector<char>> &grid, Position next,
+                  std::vector<std::vector<int64_t>> &memo)
+{
+    const int32_t rows = grid.size();
+    const int32_t cols = grid[0].size();
+
+    if (next.row >= rows - 1)
+        return memo[next.row][next.col] = 1;
+
+    if (memo[next.row][next.col] != -1)
+        return memo[next.row][next.col];
+
+    int64_t ways = 0;
+
+    if (grid[next.row][next.col] == '^')
+    {
+        ways += timelines(grid, {next.row + 1, next.col - 1}, memo);
+        ways += timelines(grid, {next.row + 1, next.col + 1}, memo);
+    }
+    else
+    {
+        ways += timelines(grid, {next.row + 1, next.col}, memo);
+    }
+    memo[next.row][next.col] = ways;
+    return ways;
+}
+
+void timelines_and_num_beam_splits(std::vector<std::vector<char>> &grid)
 {
 
     int32_t rows = grid.size();
     int32_t cols = grid[0].size();
     Position start = get_start(grid);
 
-    return traverse(grid, {start.row + 1, start.col});
+    std::vector<std::vector<int64_t>> memo(rows, std::vector<int64_t>(cols, -1));
+
+    // traverse modifies grid, hence timilines calculated first
+    std::cout << "(PART 2) Timelines : "
+              << timelines(grid, {start.row + 1, start.col}, memo) << std::endl;
+
+    std::cout << "(PART 1) Beam Splits : "
+              << traverse(grid, {start.row + 1, start.col}) << std::endl;
 }
 
 int main()
@@ -77,5 +111,5 @@ int main()
         grid.emplace_back(line.begin(), line.end());
     }
 
-    std::cout << "(PART 1) : Num times beam split : " << get_num_beam_splits(grid) << std::endl;
+    timelines_and_num_beam_splits(grid);
 }
